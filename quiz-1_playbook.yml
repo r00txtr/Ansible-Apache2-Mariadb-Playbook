@@ -1,0 +1,55 @@
+- name: Install and Ensure the Apache2 service started
+  hosts: webservers
+  become: true
+  vars:
+    web_pkg: apache2
+    web_service: apache2
+    db_pkg: mariadb-server
+    db_service: mariadb
+    php_pkg: php
+    phpmysql_pkg: php-mysql
+    python_pkg: python3-urllib3
+
+  tasks:
+    - name: Required packages are installed and up to date
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+        name:
+          - "{{web_pkg}}"
+          - "{{db_pkg}}"
+          - "{{php_pkg}}"
+          - "{{phpmysql_pkg}}"
+          - "{{python_pkg}}"
+        state: latest
+
+    - name: The {{web_service}} service is started and enabled
+      service:
+         name: "{{web_service}}"
+         enabled: true
+         state: started
+
+    - name: The {{db_service}} service is started and enabled
+      service:
+         name: "{{db_service}}"
+         enabled: true
+         state: started
+
+    - name: Web content is in place
+      copy:
+        content: "Adinusa quiz Playbook - r00txtr1"
+        dest: /var/www/html/index.html
+
+- name: Verify the web server is accessible
+  hosts: localhost
+  tasks:
+    - name: Testing web server
+      uri:
+        url: http://pod-r00txtr1-managed2
+        status_code: 200
+        return_content: yes
+      register: Result
+
+    - name: Print Ouput web server
+      debug:
+        var: Result.content
